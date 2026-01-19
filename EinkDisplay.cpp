@@ -126,11 +126,11 @@ void EinkDisplay::prepare(void) {
   uint16_t eink_y = (eink_height - 1);
 
   // Hardware Reset
-  delay(20);
+  delay(2);
   gpio_set_value(rst_fd, 0);
-  delay(20);
+  delay(2);
   gpio_set_value(rst_fd, 1);
-  delay(30);
+  delay(3);
 
   _beginSPI();
 
@@ -203,7 +203,7 @@ void EinkDisplay::displayNormal(void) {
   _waitWhileBusy();
   
   // Force a delay to ensure update completes
-  delay(3000); // Keep the safety delay
+  delay(5); // Keep the safety delay
 
   _writeCommand (0x10); // Deep Sleep mode
   _writeData (0x01);
@@ -223,10 +223,11 @@ void EinkDisplay::displayFast(void) {
   _writeData(0xFF);    // Vendor "Fast" mode sequence
 
   _writeCommand(0x20); // Master Activation
+  delay(1); // Keep the safety delay
   _waitWhileBusy();
   
   // Force a delay to ensure update completes
-  delay(3000); // Keep the safety delay
+  delay(5); // Keep the safety delay
 
   _writeCommand (0x10); // Deep Sleep mode
   _writeData (0x01);

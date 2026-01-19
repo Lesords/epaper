@@ -28,7 +28,6 @@
 #include "image_data.h"
 
 // Default GPIOs (Change these or pass as arguments)
-// These are just placeholders!
 #define DEFAULT_SPI_DEV "/dev/spidev1.0"
 #define DEFAULT_BASE_PIN 519
 #define DEFAULT_DC_PIN   (DEFAULT_BASE_PIN + 90)
@@ -84,20 +83,15 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
+#ifdef CLEAR_BEFORE_IMAGE
     std::cout << "Preparing display (Init & Power On)..." << std::endl;
     display.prepare();
-
-    // --- Added Clear Cycle to remove ghosting/artifacts ---
-    std::cout << "Clearing display (White refresh)..." << std::endl;
     display.clearDisplay();
     display.displayNormal(); // Use Normal/Slow for clear
-    
-    // Display goes to sleep after display(), so we must wake it up again
-    std::cout << "Re-initializing for Normal Mode Image..." << std::endl;
-    display.prepare();
-    // -----------------------------------------------------
+#endif
 
-    std::cout << "Displaying image (Normal/Slow Mode)..." << std::endl;
+    std::cout << "Initializing for Normal Mode Image..." << std::endl;
+    display.prepare();
 
     switch (image_id) {
         case 0:
@@ -126,30 +120,13 @@ int main(int argc, char* argv[]) {
             return 1;
     }
 
-    // Pass NULL for red channel to avoid displaying old/garbage data
-    // display.displayImage(gImage_bw_beaglebone, NULL);
-    
-    std::cout << "Updating display (Normal)..." << std::endl;
-    display.displayNormal();
-    
-    std::cout << "Waiting 1 seconds..." << std::endl;
-    sleep(1);
-
-    return 0;
-
-    std::cout << "Re-initializing for Fast Mode Image..." << std::endl;
-    display.prepare();
-
-    std::cout << "Displaying image (Fast Mode)..." << std::endl;
-    // We can just update again with the same image data in RAM, 
-    // but displayImage writes to RAM. 
-    // Since the display powered down, RAM might be lost? 
-    // SSD1683 RAM is usually retained if VDD is kept, but Deep Sleep (0x10, 0x01) usually turns off power.
-    // So we should rewrite the image.
-    display.displayImage(gImage_bw_beaglebone, NULL);
-
+#ifdef FAST_MOEE
     std::cout << "Updating display (Fast)..." << std::endl;
     display.displayFast();
+#else
+    std::cout << "Updating display (Normal)..." << std::endl;
+    display.displayNormal();
+#endif
 
     std::cout << "Done!" << std::endl;
 
