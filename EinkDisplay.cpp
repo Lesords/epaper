@@ -385,7 +385,7 @@ void EinkDisplay::clearDisplay(void) {
     _sendData(buffer, total_bytes);
 
     // No Red (0x00)
-    memset(buffer, 0x00, total_bytes);
+    memset(buffer, 0xFF, total_bytes);
     _writeCommand(0x26);
     _sendData(buffer, total_bytes);
     
@@ -458,6 +458,11 @@ void EinkDisplay::displayImage(const uint8_t* image_bw, const uint8_t* image_red
         }
     }
 
+    if (!image_red) {
+        _endSPI();
+        return;
+    }
+
     // Reset RAM counters for Red layer
     _writeCommand(0x4E);
     _writeData(0x00);
@@ -483,7 +488,7 @@ void EinkDisplay::displayImage(const uint8_t* image_bw, const uint8_t* image_red
         // Default to no red if null
         uint8_t* buffer = (uint8_t*)malloc(total_bytes);
         if (buffer) {
-            memset(buffer, 0x00, total_bytes);
+            memset(buffer, 0xFF, total_bytes);
             _sendData(buffer, total_bytes);
             free(buffer);
         }

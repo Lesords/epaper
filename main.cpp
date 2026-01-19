@@ -43,15 +43,31 @@ int main(int argc, char* argv[]) {
     int cs = DEFAULT_CS_PIN;
     int busy = DEFAULT_BUSY_PIN;
     int image_id = 0;
+    bool fast_mode = false;
+    bool clear_before_fast_mode = false;
 
-    // Parse args: ./epaper_test [arg_image] [dc] [rst] [cs] [busy]
+    // Parse args: ./epaper_test [arg_image] [--fast | --clear] [dc] [rst] [cs] [busy]
     
     int arg_idx = 1;
     if (argc > arg_idx) arg_image = argv[arg_idx++];
-    if (argc > arg_idx) dc = std::stoi(argv[arg_idx++]);
-    if (argc > arg_idx) rst = std::stoi(argv[arg_idx++]);
-    if (argc > arg_idx) cs = std::stoi(argv[arg_idx++]);
-    if (argc > arg_idx) busy = std::stoi(argv[arg_idx++]);
+    if (argc > arg_idx) {
+        while (arg_idx < argc) {
+            if (argv[arg_idx][0] != '-') {
+                break;
+            }
+            if (strcmp(argv[arg_idx], "--fast") == 0) {
+                fast_mode = true;
+            } else if (strcmp(argv[arg_idx], "--clear") == 0) {
+                clear_before_fast_mode = true;
+            }
+            arg_idx++;
+        }
+
+        if (argc > arg_idx) dc = std::stoi(argv[arg_idx++]);
+        if (argc > arg_idx) rst = std::stoi(argv[arg_idx++]);
+        if (argc > arg_idx) cs = std::stoi(argv[arg_idx++]);
+        if (argc > arg_idx) busy = std::stoi(argv[arg_idx++]);
+    }
 
     if (arg_image == "boy") {
         image_id = 0;
@@ -68,7 +84,7 @@ int main(int argc, char* argv[]) {
     } else if (arg_image == "eagle_atkinson") {
         image_id = 6;
     } else {
-        printf("Usage: %s [boy girl beaglebone tower eagle_binary eagle_bayer eagle_atkinson]\n", argv[0]);
+        printf("Usage: %s [boy girl beaglebone tower eagle_binary eagle_bayer eagle_atkinson --fast --clear]\n", argv[0]);
         return 0;
     }
 
@@ -83,50 +99,51 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-#ifdef CLEAR_BEFORE_IMAGE
-    std::cout << "Preparing display (Init & Power On)..." << std::endl;
-    display.prepare();
-    display.clearDisplay();
-    display.displayNormal(); // Use Normal/Slow for clear
-#endif
+    if (clear_before_fast_mode) {
+        std::cout << "Preparing display (Init & Power On)..." << std::endl;
+        display.prepare();
+        display.clearDisplay();
+        display.displayNormal(); // Use Normal/Slow for clear
+        sleep(2);
+    }
 
     std::cout << "Initializing for Normal Mode Image..." << std::endl;
     display.prepare();
 
     switch (image_id) {
         case 0:
-            display.displayImage(gImage_bw_boy, NULL);
+            display.displayImage(gImage_bw_boy, (fast_mode) ? NULL : gImage_bw_boy);
             break;
         case 1:
-            display.displayImage(gImage_bw_girl, NULL);
+            display.displayImage(gImage_bw_girl, (fast_mode) ? NULL : gImage_bw_girl);
             break;
         case 2:
-            display.displayImage(gImage_bw_beaglebone, NULL);
+            display.displayImage(gImage_bw_beaglebone, (fast_mode) ? NULL : gImage_bw_beaglebone);
             break;
         case 3:
-            display.displayImage(gImage_bw_tower, NULL);
+            display.displayImage(gImage_bw_tower, (fast_mode) ? NULL : gImage_bw_tower);
             break;
         case 4:
-            display.displayImage(gImage_bw_eagle_binary, NULL);
+            display.displayImage(gImage_bw_eagle_binary, (fast_mode) ? NULL : gImage_bw_eagle_binary);
             break;
         case 5:
-            display.displayImage(gImage_bw_eagle_bayer, NULL);
+            display.displayImage(gImage_bw_eagle_bayer, (fast_mode) ? NULL : gImage_bw_eagle_bayer);
             break;
         case 6:
-            display.displayImage(gImage_bw_eagle_atkinson, NULL);
+            display.displayImage(gImage_bw_eagle_atkinson, (fast_mode) ? NULL : gImage_bw_eagle_atkinson);
             break;
         default:
             std::cerr << "Invalid image ID!" << std::endl;
             return 1;
     }
 
-#ifdef FAST_MOEE
-    std::cout << "Updating display (Fast)..." << std::endl;
-    display.displayFast();
-#else
-    std::cout << "Updating display (Normal)..." << std::endl;
-    display.displayNormal();
-#endif
+    if (fast_mode) {
+        std::cout << "Updating display (Fast)..." << std::endl;
+        display.displayFast();
+    } else {
+        std::cout << "Updating display (Normal)..." << std::endl;
+        display.displayNormal();
+    }
 
     std::cout << "Done!" << std::endl;
 
