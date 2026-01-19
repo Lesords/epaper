@@ -24,11 +24,20 @@ The compiled program is named epaper_test. You can run this program directly to 
 epaper_test
 
 # output
-Usage: ./epaper_test [boy girl beaglebone tower eagle_binary eagle_bayer eagle_atkinson]
+Usage: ./epaper_test [boy girl beaglebone tower eagle_binary eagle_bayer eagle_atkinson --fast --clear]
 ```
 
 Usage examples
 ```bash
+# Slow Mode
 epaper_test beaglebone
 epaper_test eagle_binary
+
+# Fast Mode
+# You need to refresh slowly once before refreshing quickly
+epaper_test beaglebone
+epaper_test eagle_binary --fast
+
+# Or use clear parameters in fast mode
+epaper_test eagle_binary --fast --clear
 ```
