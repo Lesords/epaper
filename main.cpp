@@ -95,8 +95,12 @@ int main(int argc, char* argv[]) {
         image_id = 6;
     } else if (arg_image == "test") {
         image_id = 7;
+    } else if (arg_image == "white") {
+        image_id = 8;
+    } else if (arg_image == "black") {
+        image_id = 9;
     } else {
-        printf("Usage: %s [boy girl beaglebone tower eagle_binary eagle_bayer eagle_atkinson [test (--full)] --fast --clear]\n", argv[0]);
+        printf("Usage: %s [boy girl beaglebone tower eagle_binary eagle_bayer eagle_atkinson white black [test (--full)] --fast --clear]\n", argv[0]);
         return 0;
     }
 
@@ -124,6 +128,8 @@ int main(int argc, char* argv[]) {
     std::cout << "Initializing for Normal Mode Image..." << std::endl;
     display.prepare();
 
+    size_t total_bytes = 300 * 400 / 8;
+    uint8_t* buffer = (uint8_t*)malloc(total_bytes);
     switch (image_id) {
         case 0:
             display.displayImage(gImage_bw_boy, (fast_mode) ? NULL : gImage_bw_boy);
@@ -148,6 +154,14 @@ int main(int argc, char* argv[]) {
             break;
         case 7:
             display.displayTest(full_mode);
+            break;
+        case 8:
+            memset(buffer, 0xFF, total_bytes);
+            display.displayImage(buffer, buffer);
+            break;
+        case 9:
+            memset(buffer, 0x00, total_bytes);
+            display.displayImage(buffer, buffer);
             break;
         default:
             std::cerr << "Invalid image ID!" << std::endl;
