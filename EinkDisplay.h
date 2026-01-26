@@ -45,6 +45,7 @@ class EinkDisplay : public GFX {
     void         clearDisplay(void);
     void         fillBlack(void);
     void         displayImage(const uint8_t* image_bw, const uint8_t* image_red); // New method for full screen image
+    void         displayTest(int full_mode);
     void         setWhiteBorder(void);
     void         setBlackBorder(void);
     void         setRedBorder(void);

@@ -417,6 +417,55 @@ void EinkDisplay::fillBlack(void) {
     free(buffer);
 }
 
+void EinkDisplay::displayTest(int full_mode) {
+    uint16_t w = (eink_width + 7) / 8;
+    uint16_t h = eink_height;
+    size_t total_bytes = w * h;
+
+    uint8_t* buffer = (uint8_t*)malloc(total_bytes);
+    if (!buffer) return;
+
+    _beginSPI();
+
+    // Set RAM X address counter to 0
+    _writeCommand(0x4E);
+    _writeData(0x00);
+
+    // Set RAM Y address counter to eink_height - 1
+    _writeCommand(0x4F);
+    _writeData(eink_height - 1);
+    _writeData((eink_height - 1) >> 8);
+
+    // set BW RAM to all black
+    memset(buffer, 0xFF, total_bytes);
+    _writeCommand(0x24);
+    _sendData(buffer, total_bytes);
+
+    // set Red RAM to all red
+    memset(buffer, 0x00, total_bytes);
+    _writeCommand(0x26);
+    _sendData(buffer, total_bytes);
+
+    _writeCommand(0x18); // Temperature sensor
+    _writeData(0x80);    // Internal
+
+    _writeCommand(0x21); // Display Update Control 1
+    _writeData(0x00);
+    _writeData(0x00);
+
+    _writeCommand(0x22); // Display Update Control 2
+    if (full_mode)
+        _writeData(0xF7);    // Full Mode
+    else
+        _writeData(0xFF);
+
+    _writeCommand(0x20); // Master Activation
+
+    _waitWhileBusy();
+
+    _endSPI();
+}
+
 void EinkDisplay::displayImage(const uint8_t* image_bw, const uint8_t* image_red) {
     uint16_t w = (eink_width + 7) / 8;
     uint16_t h = eink_height;

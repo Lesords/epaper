@@ -24,6 +24,7 @@
 #include <string>
 #include <unistd.h>
 #include <vector>
+#include <sys/time.h>
 #include "EinkDisplay.h"
 #include "image_data.h"
 
@@ -35,6 +36,12 @@
 #define DEFAULT_CS_PIN   -1  // -1 means let spidev handle CS
 #define DEFAULT_BUSY_PIN (DEFAULT_BASE_PIN + 39)
 
+static long long getTimestampUs() {
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return (tv.tv_sec * (long long)(1e+6) + tv.tv_usec);
+}
+
 int main(int argc, char* argv[]) {
     std::string spi_dev = DEFAULT_SPI_DEV;
     std::string arg_image;
@@ -45,8 +52,9 @@ int main(int argc, char* argv[]) {
     int image_id = 0;
     bool fast_mode = false;
     bool clear_before_fast_mode = false;
+    bool full_mode = false;
 
-    // Parse args: ./epaper_test [arg_image] [--fast | --clear] [dc] [rst] [cs] [busy]
+    // Parse args: ./epaper_test [arg_image] [--fast | --clear] [dc] [rst] [cs] [busy] [test (--full)]
     
     int arg_idx = 1;
     if (argc > arg_idx) arg_image = argv[arg_idx++];
@@ -59,6 +67,8 @@ int main(int argc, char* argv[]) {
                 fast_mode = true;
             } else if (strcmp(argv[arg_idx], "--clear") == 0) {
                 clear_before_fast_mode = true;
+            } else if (strcmp(argv[arg_idx], "--full") == 0) {
+                full_mode = true;
             }
             arg_idx++;
         }
@@ -83,14 +93,18 @@ int main(int argc, char* argv[]) {
         image_id = 5;
     } else if (arg_image == "eagle_atkinson") {
         image_id = 6;
+    } else if (arg_image == "test") {
+        image_id = 7;
     } else {
-        printf("Usage: %s [boy girl beaglebone tower eagle_binary eagle_bayer eagle_atkinson --fast --clear]\n", argv[0]);
+        printf("Usage: %s [boy girl beaglebone tower eagle_binary eagle_bayer eagle_atkinson [test (--full)] --fast --clear]\n", argv[0]);
         return 0;
     }
 
     std::cout << "Initializing E-Ink Display..." << std::endl;
     std::cout << "SPI: " << spi_dev << std::endl;
     
+    long long start_time = getTimestampUs();
+
     // Initialize display for HINK-E042A162 (4.2 inch, 400x300)
     EinkDisplay display(300, 400, spi_dev, dc, rst, cs, busy);
 
@@ -132,9 +146,18 @@ int main(int argc, char* argv[]) {
         case 6:
             display.displayImage(gImage_bw_eagle_atkinson, (fast_mode) ? NULL : gImage_bw_eagle_atkinson);
             break;
+        case 7:
+            display.displayTest(full_mode);
+            break;
         default:
             std::cerr << "Invalid image ID!" << std::endl;
             return 1;
+    }
+
+    if (image_id == 7) {
+        printf("Test mode complete.\n");
+        printf("Total time: %.3f seconds\n", float(getTimestampUs() - start_time) / 1e+6);
+        return 0;
     }
 
     if (fast_mode) {
@@ -145,6 +168,7 @@ int main(int argc, char* argv[]) {
         display.displayNormal();
     }
 
+    printf("Total time: %.3f seconds\n", float(getTimestampUs() - start_time) / 1e+6);
     std::cout << "Done!" << std::endl;
 
     return 0;
