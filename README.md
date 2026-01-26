@@ -40,4 +40,8 @@ epaper_test eagle_binary --fast
 
 # Or use clear parameters in fast mode
 epaper_test eagle_binary --fast --clear
+
+# Test Mode
+epaper_test test
+epaper_test test --full
 ```
