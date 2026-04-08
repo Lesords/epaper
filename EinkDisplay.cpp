@@ -165,11 +165,22 @@ void EinkDisplay::prepare(void) {
 
   // Border Waveform Control
   _writeCommand(0x3C);
-  _writeData(0x01); // Vendor sets White (0x01)
+  _writeData(0x05); // Kernel value: 0x05 (was 0x01)
 
   // Display Update Control 1
   _writeCommand(0x21);
   _writeData(0x40);
+  _writeData(0x00); // Kernel sends 2 bytes: 0x40, 0x00
+
+  // Temperature Sensor Control (Kernel style)
+  _writeCommand(0x1A);
+  _writeData(0x6E);
+
+  // Load Temperature (Kernel initialization sequence)
+  _writeCommand(0x22);
+  _writeData(0x91);
+  _writeCommand(0x20);
+  _waitWhileBusy();
 
   // --- INIT_SSD1683 Sequence End ---
 
@@ -190,12 +201,8 @@ void EinkDisplay::display(void) {
 void EinkDisplay::displayNormal(void) {
   _beginSPI();
   
-  _writeCommand(0x18); // Temperature sensor
-  _writeData(0x80);    // Internal
-
-  _writeCommand(0x21); // Display Update Control 1
-  _writeData(0x40);    // RAM -> Display (Source Output) ? Vendor uses 0x40 here.
-
+  // Kernel driver style: assumes temp sensor and update ctrl 1 were set in init (prepare)
+  
   _writeCommand(0x22); // Display Update Control 2
   _writeData(0xF7);    // Vendor "Slow" mode sequence
 
